@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SLAB Deck Works</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='11' y='2' width='10' height='28' rx='5' fill='%23c98a1b'/%3E%3C/svg%3E">
+<meta name="description" content="SLAB Deck Works: pick a deck off the wall, kickflip it, check out at the counter.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Space+Grotesk:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="styles.css">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="stage" aria-hidden="true"></canvas>
+
+<header class="bar">
+  <button class="brand" id="brand" type="button"><span class="brand-word">SLAB</span> <small>Deck Works</small></button>
+  <nav class="rooms" id="rooms" aria-label="Categories">
+    <button type="button" data-room="decks">Decks</button>
+    <button type="button" data-room="wheels">Wheels</button>
+    <button type="button" data-room="trucks">Trucks</button>
+    <button type="button" class="browse-open" id="browseOpen" aria-expanded="false" aria-controls="browse">
+      Browse all <span id="browseCount"></span>
+    </button>
+  </nav>
+  <button class="cart-link" id="cartLink" type="button" aria-expanded="false" aria-controls="cartPanel">Cart <span id="cartCount">0</span></button>
+</header>
+
+<aside class="drawer glass cartpanel" id="cartPanel" aria-labelledby="cpTitle" inert>
+  <div class="drawer-head">
+    <h2 id="cpTitle">Your cart</h2>
+    <button class="icon" id="cpClose" type="button" aria-label="Close cart">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="cp-undo" id="cpUndo" role="status" hidden><span id="cpUndoText"></span><button class="link" id="cpUndoBtn" type="button">Undo</button></div>
+  <ul class="cp-list" id="cpList"></ul>
+  <div class="cp-empty">
+    <p>Your cart is empty. Pick something off the wall, or browse the full range.</p>
+    <button class="btn" id="cpBrowse" type="button">Browse all</button>
+  </div>
+  <div class="cp-foot">
+    <div class="row"><span class="cp-total-label">Total</span><span class="price" id="cpTotal">$0</span></div>
+    <button class="btn cp-checkout" id="cpCheckout" type="button">Checkout</button>
+    <p class="cp-note">Demo store: no payment is taken.</p>
+  </div>
+</aside>
+
+<aside class="drawer glass" id="browse" aria-label="Browse all products" inert>
+  <div class="drawer-head">
+    <h2>Browse all</h2>
+    <button class="icon" id="bClose" type="button" aria-label="Close browse">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="filters">
+    <input id="bQuery" type="search" autocomplete="off" aria-label="Search products">
+    <div class="cats" id="bCats" aria-label="Category"></div>
+    <div class="filter-row">
+      <select id="bSize" aria-label="Size"></select>
+      <select id="bSort" aria-label="Sort"></select>
+    </div>
+    <label class="price-filter">Max price <output id="bPriceOut"></output><input id="bPrice" type="range"></label>
+  </div>
+  <div class="results-head"><p class="count" id="bCount" aria-live="polite"></p><button class="link" id="bReset" type="button">Reset</button></div>
+  <div class="results" id="bResults"><div class="grid" id="bSpacer"></div></div>
+</aside>
+
+<nav class="sr-only" id="deckNav" aria-label="Shop"></nav>
+
+<p class="hint" id="hint"></p>
+
+<section class="panel glass" id="card" aria-labelledby="cardName" inert>
+  <button class="sheet-handle" id="cardToggle" type="button" aria-expanded="true" aria-controls="cardMore" aria-label="Hide details"><span></span></button>
+  <canvas class="lite-only card-thumb" id="cardThumb" width="320" height="400" aria-hidden="true"></canvas>
+  <p class="eyebrow flip">SLAB Deck Works · <span id="cardIndex"></span></p>
+  <h2 class="flip" id="cardName"></h2>
+  <div class="more" id="cardMore"><div>
+    <p class="blurb flip" id="cardBlurb"></p>
+    <dl id="cardSpecs"></dl>
+  </div></div>
+  <div class="row flip">
+    <span class="price" id="cardPrice"></span>
+    <button class="btn" id="cardAdd" type="button">Add to cart</button>
+  </div>
+  <p class="tip flip">Drag the product to turn it · pinch to zoom · double-tap to reset</p>
+  <div class="card-links flip">
+    <button class="link" id="cardBack" type="button">← Back to the wall</button>
+    <button class="link" id="cardShare" type="button">Share</button>
+  </div>
+</section>
+
+
+<section class="panel glass" id="checkout" aria-labelledby="coTitle" inert>
+  <form id="coForm">
+    <p class="eyebrow">SLAB Deck Works</p>
+    <h2 id="coTitle">Checkout</h2>
+    <p class="blurb">Demo store. No payment is taken and nothing leaves your browser.</p>
+    <label>Email <input name="email" type="email" autocomplete="email" required></label>
+    <label>Shipping address <input name="address" autocomplete="street-address" required></label>
+    <div class="row">
+      <span class="price" id="coTotal">$0</span>
+      <button class="btn" type="submit">Place demo order</button>
+    </div>
+    <button class="link" id="coBack" type="button">← Keep browsing</button>
+  </form>
+</section>
+
+<section class="panel glass" id="confirm" aria-labelledby="cfTitle" inert>
+  <p class="eyebrow">Demo order placed</p>
+  <h2 id="cfTitle">Thank you</h2>
+  <p class="blurb"><strong id="cfOrder"></strong> · ships in 48 hours. Nothing was charged; this is a demo store.</p>
+  <ul class="cf-items" id="cfItems"></ul>
+  <div class="row"><span class="cp-total-label">Total</span><span class="price" id="cfTotal"></span></div>
+  <button class="btn" id="cfDone" type="button">Keep browsing</button>
+</section>
+
+<section class="intro glass" id="intro" aria-labelledby="introTitle" hidden>
+  <p class="eyebrow">SLAB Deck Works</p>
+  <h1 id="introTitle">A skate shop you can walk into.</h1>
+  <p class="blurb">Pick up any deck, turn it all the way around, and check out at the counter. Or just ask Slab.</p>
+  <div class="intro-actions">
+    <button class="btn" id="introStart" type="button">Start exploring</button>
+    <button class="link" id="introBrowse" type="button">Browse all 305 →</button>
+  </div>
+</section>
+
+<button class="ask-open" id="askOpen" type="button" aria-expanded="false" aria-controls="assistant">
+  <span class="pulse" aria-hidden="true"></span> Ask Slab
+</button>
+
+<section class="assistant glass" id="assistant" aria-label="Slab, the AI shop assistant" inert>
+  <header class="ask-head">
+    <div><strong>Slab</strong><small>AI shop assistant · chat or talk</small></div>
+    <button class="icon" id="askMute" type="button" aria-pressed="false" aria-label="Mute spoken replies" title="Mute spoken replies">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/><path class="cross" d="M16 9l6 6M22 9l-6 6"/></svg>
+    </button>
+    <button class="icon" id="askClose" type="button" aria-label="Close assistant">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </header>
+  <div class="ask-log" id="askLog" role="log" aria-live="polite"></div>
+  <div class="ask-chips" id="askChips"></div>
+  <form class="ask-form" id="askForm">
+    <input id="askInput" autocomplete="off" maxlength="500" placeholder="Ask about decks, sizing, your cart…" aria-label="Message Slab">
+    <button class="icon mic" id="askMic" type="button" aria-pressed="false" aria-label="Talk to Slab">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+    </button>
+    <button class="btn" type="submit">Send</button>
+  </form>
+</section>
+
+<div class="loader" id="loader">
+  <div class="loader-inner">
+    <p class="loader-brand"><span class="loader-word">SLAB</span> <small class="loader-fade">Deck Works</small></p>
+    <p class="loader-line loader-fade">A skate shop you can walk into</p>
+    <p class="loader-status loader-fade" id="loaderStatus" role="status">Setting up the shop…</p>
+  </div>
+</div>
+<p class="sr-only" id="live" aria-live="polite"></p>
+<noscript><p class="loader">This shop needs JavaScript.</p></noscript>
+
+<script>
+  // Last resort: if even the lite store can't start, say so instead of leaving the loader up forever.
+  function shopFailed() {
+    var l = document.getElementById('loader');
+    if (!l.classList.contains('done')) { l.setAttribute('role', 'alert'); l.textContent = "Couldn't load the shop. Check your connection, then reload."; }
+  }
+</script>
+<script type="module" src="js/boot.js" onerror="shopFailed()"></script>
+</body>
+</html>

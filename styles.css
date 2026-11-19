@@ -1,0 +1,455 @@
+:root {
+  --ink: #141619;
+  --paper: #f3efe8;
+  --muted: #5b5750;
+  --accent: #c98a1b;
+  --glass: rgba(246, 242, 235, 0.62);
+  --line: rgba(20, 22, 25, 0.12);
+  --bg: #2a2826;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Space Grotesk", system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+#stage { position: fixed; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+.bar {
+  position: fixed; inset: 0 0 auto 0; z-index: 3;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: calc(env(safe-area-inset-top) + 16px) 20px 0;
+  pointer-events: none;
+}
+.bar > * { pointer-events: auto; }
+
+.brand {
+  font: 400 24px/1 "Saira Stencil One", Impact, sans-serif; letter-spacing: 0.06em;
+  background: none; border: 0; padding: 6px; color: var(--ink); cursor: pointer;
+}
+.brand small {
+  font: 500 11px/1 "Space Grotesk", sans-serif; letter-spacing: 0.24em;
+  text-transform: uppercase; margin-left: 8px; opacity: 0.7;
+}
+
+.cart-link {
+  font: 700 12px/1 "Space Grotesk", sans-serif; letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 999px;
+  padding: 9px 10px 9px 16px; cursor: pointer;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.cart-link span {
+  display: inline-grid; place-items: center; min-width: 22px; height: 22px; margin-left: 8px;
+  border-radius: 999px; background: var(--ink); color: var(--paper); letter-spacing: 0;
+}
+
+.hint {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 20px); z-index: 2;
+  transform: translateX(-50%); margin: 0; padding: 10px 16px; border-radius: 999px;
+  font: 500 11px/1 "Space Grotesk", sans-serif; letter-spacing: 0.18em; text-transform: uppercase;
+  white-space: nowrap; pointer-events: none;
+  background: var(--glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  transition: opacity 0.3s;
+}
+.hint.off { opacity: 0; }
+
+.glass {
+  background: var(--glass);
+  -webkit-backdrop-filter: blur(22px) saturate(1.15); backdrop-filter: blur(22px) saturate(1.15);
+  border: 1px solid rgba(255, 255, 255, 0.55); border-radius: 20px;
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.5);
+}
+
+/* Product card swings out from behind the picked deck on a left-edge hinge, then each detail line
+   flips up into place one after another (--i is set in fillCard). */
+#card.panel {
+  transform-origin: 0% 50%;
+  transform: translate(0, -50%) perspective(1200px) translateX(-60px) rotateY(-82deg) scale(0.9);
+  transition: opacity 0.25s, transform 0.75s cubic-bezier(0.2, 0.9, 0.2, 1.08), visibility 0s 0.75s;
+}
+#card.panel.open { transform: translate(0, -50%); transition-delay: 0.18s, 0.18s, 0s; }
+#card .flip {
+  opacity: 0; transform: perspective(500px) rotateX(-85deg); transform-origin: 50% 0%;
+  transition: opacity 0.2s, transform 0.45s cubic-bezier(0.25, 0.9, 0.3, 1.15);
+}
+#card.open .flip { opacity: 1; transform: none; transition-delay: calc(0.42s + var(--i, 0) * 60ms); }
+
+/* Collapsible details (phones): the handle shrinks the card to a slim name/price/add bar. */
+.sheet-handle { display: none; }
+.more { display: grid; grid-template-rows: 1fr; transition: grid-template-rows 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.more > div { overflow: hidden; min-height: 0; }
+.tip { display: none; margin: 0 0 10px; font-size: 12px; line-height: 1.4; color: var(--muted); }
+@media (pointer: coarse) { .tip { display: block; } }
+
+/* Checkout rises out of the counter: centred low, hinged at its bottom edge, tipping up in perspective.
+   Its glass is more opaque because it sits over the dark counter. */
+#checkout.panel {
+  background: rgba(246, 242, 235, 0.86);
+  top: auto; right: auto; left: 50%; bottom: max(40px, 6vh);
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) perspective(900px) translateY(120px) rotateX(78deg);
+  transition: opacity 0.3s, transform 0.7s cubic-bezier(0.2, 0.9, 0.25, 1.05), visibility 0s 0.7s;
+}
+#checkout.panel.open { transform: translateX(-50%); transition-delay: 0.1s, 0.1s, 0s; }
+
+.panel {
+  position: fixed; z-index: 4; top: 50%; right: max(5vw, 24px);
+  width: min(380px, calc(100vw - 32px)); max-height: calc(100% - 32px); overflow: auto; padding: 26px 28px;
+  opacity: 0; visibility: hidden; transform: translate(24px, -50%);
+  transition: opacity 0.35s, transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.45s;
+}
+.panel.open {
+  opacity: 1; visibility: visible; transform: translate(0, -50%);
+  transition-delay: 0.25s, 0.25s, 0s;
+}
+
+.eyebrow { margin: 0 0 6px; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); }
+.panel h2 { margin: 0 0 6px; font: 400 46px/1 "Saira Stencil One", Impact, sans-serif; letter-spacing: 0.02em; }
+.blurb { margin: 0 0 16px; font-size: 14px; line-height: 1.45; color: var(--muted); }
+
+dl { display: grid; grid-template-columns: auto 1fr; margin: 0 0 18px; font-size: 13px; }
+dt, dd { padding: 7px 0; border-top: 1px solid var(--line); }
+dt { color: var(--muted); text-transform: uppercase; letter-spacing: 0.14em; font-size: 11px; padding-right: 16px; }
+dd { margin: 0; text-align: right; font-weight: 500; }
+
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.price { font-size: 30px; font-weight: 700; }
+
+.btn {
+  font: 700 12px/1 "Space Grotesk", sans-serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--paper); background: var(--ink); border: 0; border-radius: 999px;
+  padding: 14px 20px; cursor: pointer; transition: transform 0.15s;
+}
+.btn:active:not([aria-disabled="true"]) { transform: scale(0.97); }
+/* Busy (js/micro.js busyBeat): a spinner after the label; it stays focusable and blocks repeats via aria-disabled. */
+.btn[aria-busy="true"] { cursor: progress; }
+.btn[aria-busy="true"]::after {
+  content: ""; display: inline-block; width: 11px; height: 11px; margin: -2px 0 -2px 10px; vertical-align: middle;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(1turn); } }
+/* Touch: give small controls a 44px hit area without changing how they look or lay out. */
+@media (pointer: coarse) {
+  .link, .cart-link, .icon { position: relative; }
+  .link::after { content: ""; position: absolute; inset: -12px -6px; }
+  .rooms button::after, .cart-link::after { content: ""; position: absolute; inset: -3px 0; }
+  .icon::after { content: ""; position: absolute; inset: -3px; }
+  .hold { min-height: 44px; } /* .hold clips ::after (overflow: hidden), so it gets a real 44px box */
+}
+
+.link {
+  background: none; border: 0; padding: 4px 0; cursor: pointer; color: var(--muted);
+  font: 500 12px/1 "Space Grotesk", sans-serif; letter-spacing: 0.14em; text-transform: uppercase;
+}
+@media (hover: hover) { .link:hover { color: var(--ink); } } /* no sticky hover after a tap on phones */
+
+label { display: block; margin-bottom: 14px; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+input {
+  display: block; width: 100%; margin-top: 6px; padding: 8px 0;
+  font: 500 16px "Space Grotesk", sans-serif; color: var(--ink);
+  background: transparent; border: 0; border-bottom: 1px solid rgba(20, 22, 25, 0.3); border-radius: 0; outline: 0;
+}
+input:focus { border-bottom-color: var(--ink); }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.loader {
+  position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; margin: 0;
+  background: var(--bg); color: var(--paper);
+  font: 500 12px/1 "Space Grotesk", sans-serif; letter-spacing: 0.24em; text-transform: uppercase;
+  transition: opacity 0.6s, visibility 0s 0.6s;
+}
+.loader.done { opacity: 0; visibility: hidden; }
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+/* Keyboard users: the hidden shop menu becomes a visible bar while it has focus. */
+#deckNav:focus-within {
+  position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 64px); z-index: 5;
+  width: max-content; height: auto; margin: 0; clip: auto; overflow: visible; transform: translateX(-50%);
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: calc(100vw - 32px);
+}
+#deckNav button {
+  font: 600 11px/1 "Space Grotesk", sans-serif; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 999px;
+  padding: 8px 12px; cursor: pointer;
+}
+
+/* ── Ask Slab assistant ── */
+.ask-open {
+  position: fixed; left: 20px; bottom: calc(env(safe-area-inset-bottom) + 20px); z-index: 5;
+  display: flex; align-items: center; gap: 10px; padding: 12px 18px; border: 0; border-radius: 999px; cursor: pointer;
+  font: 700 12px/1 "Space Grotesk", sans-serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--paper); background: var(--ink); box-shadow: 0 12px 30px -12px rgba(0, 0, 0, 0.6);
+}
+.pulse { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(201, 138, 27, 0.7); } 70%, 100% { box-shadow: 0 0 0 10px rgba(201, 138, 27, 0); } }
+
+.assistant {
+  position: fixed; left: 20px; bottom: calc(env(safe-area-inset-bottom) + 76px); z-index: 6;
+  display: flex; flex-direction: column; width: min(370px, calc(100vw - 32px)); height: min(500px, calc(100% - 150px));
+  background: rgba(246, 242, 235, 0.88);
+  opacity: 0; visibility: hidden; transform: translateY(16px);
+  transition: opacity 0.25s, transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.3s;
+}
+.assistant.open { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+
+.ask-head { display: flex; align-items: center; gap: 6px; padding: 14px 14px 10px 18px; border-bottom: 1px solid var(--line); }
+.ask-head div { flex: 1; }
+.ask-head strong { display: block; font: 400 22px/1 "Saira Stencil One", Impact, sans-serif; letter-spacing: 0.04em; }
+.ask-head small { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+
+.icon {
+  display: grid; place-items: center; width: 38px; height: 38px; flex: none; padding: 0; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 50%; background: transparent; color: var(--ink);
+}
+.icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+#askMute .cross, #askMute[aria-pressed="true"] .wave { display: none; }
+#askMute[aria-pressed="true"] .cross { display: inline; }
+
+.ask-log { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; overscroll-behavior: contain; }
+.msg { margin: 0; max-width: 85%; padding: 9px 13px; border-radius: 16px; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; }
+.msg.bot { align-self: flex-start; background: #fff; border-bottom-left-radius: 4px; }
+.msg.user { align-self: flex-end; background: var(--ink); color: var(--paper); border-bottom-right-radius: 4px; }
+.msg.typing { color: var(--muted); font-style: italic; }
+.msg.error { background: #fbe9e4; color: #7a2414; }
+
+.ask-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 10px; }
+.ask-chips[hidden] { display: none; }
+.ask-chips button {
+  font: 500 12px/1 "Space Grotesk", sans-serif; padding: 8px 11px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink);
+}
+
+.ask-form { display: flex; gap: 8px; align-items: center; padding: 10px 12px 12px; border-top: 1px solid var(--line); }
+.ask-form input { flex: 1; min-width: 0; margin: 0; padding: 10px 2px; border-bottom: 0; }
+.ask-form .btn { padding: 12px 16px; }
+.ask-form.busy .btn, .ask-form.busy .mic { opacity: 0.5; pointer-events: none; }
+.mic.live { color: #fff; background: #c4361b; border-color: #c4361b; animation: listening 1.2s infinite; }
+@keyframes listening { 50% { box-shadow: 0 0 0 6px rgba(196, 54, 27, 0.25); } }
+
+/* ── Loader: the SLAB wordmark holds the screen, then flies into the header logo (js/loader.js) ── */
+.loader-inner { display: grid; justify-items: center; gap: 12px; text-align: center; padding: 24px; }
+.loader-brand { margin: 0; font: 400 56px/1 "Saira Stencil One", Impact, sans-serif; letter-spacing: 0.06em; color: var(--accent); text-transform: none; }
+.loader-brand small { display: block; margin-top: 8px; font: 500 12px/1 "Space Grotesk", sans-serif; letter-spacing: 0.3em; text-transform: uppercase; color: var(--paper); }
+.loader-line { margin: 0; font: 500 15px/1.4 "Space Grotesk", sans-serif; letter-spacing: 0.02em; text-transform: none; color: rgba(243, 239, 232, 0.75); }
+.loader-status { margin: 0; font-size: 11px; letter-spacing: 0.24em; color: rgba(243, 239, 232, 0.6); opacity: 0; animation: loader-show 0.4s 1.6s forwards; } /* only on slow loads */
+/* The wordmark waits for its own font (js/loader.js adds .fonts-in), so it never flashes the fallback;
+   if the font is slow, it shows after 1.2s anyway. */
+.loader-inner { opacity: 0; animation: loader-show 0s 1.2s forwards; }
+.loader.fonts-in .loader-inner { opacity: 1; animation: none; transition: opacity 0.35s ease-out; }
+.loader-word { display: inline-block; } /* so it can fly into the header logo */
+@keyframes loader-show { to { opacity: 1; } }
+
+/* ── Cart drawer ── */
+.cart-link span.bump { animation: bump 0.45s cubic-bezier(0.3, 1.6, 0.5, 1); }
+@keyframes bump { 40% { transform: scale(1.35); } }
+.drawer.cartpanel { z-index: 8; } /* above Browse, which stays open in the lite store (.drawer below would win otherwise) */
+.cp-list { list-style: none; margin: 0; padding: 4px 20px; flex: 1; min-height: 0; overflow-y: auto; }
+.cp-item { display: grid; grid-template-columns: 56px 1fr auto; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.cp-item canvas { width: 56px; height: 70px; border-radius: 8px; background: #ece7df; }
+.cp-info { display: grid; gap: 4px; min-width: 0; }
+.cp-name { padding: 0; border: 0; background: none; cursor: pointer; text-align: left; color: var(--ink); font: 700 14px/1.2 "Space Grotesk", sans-serif; letter-spacing: 0.04em; }
+@media (hover: hover) { .cp-name:hover { text-decoration: underline; } }
+.cp-meta { font-size: 12px; color: var(--muted); }
+.cp-empty { display: none; padding: 8px 20px 20px; }
+.cp-empty p { margin: 0 0 14px; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.cartpanel.empty .cp-empty { display: block; }
+.cartpanel.empty .cp-foot, .cartpanel.empty .cp-list { display: none; }
+.cp-foot { padding: 14px 20px 18px; border-top: 1px solid var(--line); }
+.cp-total-label { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
+.cp-checkout { width: 100%; }
+.cp-note { margin: 10px 0 0; font-size: 12px; color: var(--muted); text-align: center; }
+
+/* ── Order receipt ── */
+.cf-items { list-style: none; margin: 0 0 14px; padding: 0; font-size: 14px; }
+.cf-items li { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-top: 1px solid var(--line); }
+#confirm .btn { width: 100%; }
+
+/* ── First-visit welcome ── */
+.intro {
+  position: fixed; z-index: 4; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 76px); transform: translateX(-50%);
+  width: min(460px, calc(100vw - 32px)); padding: 22px 24px; animation: rise 0.6s 0.4s both cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+@keyframes rise { from { opacity: 0; transform: translate(-50%, 16px); } }
+.intro h1 { margin: 0 0 8px; font: 400 30px/1.05 "Saira Stencil One", Impact, sans-serif; letter-spacing: 0.02em; }
+.intro-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+body.browsing .intro { display: none; }
+
+/* Product card: back + share links side by side. */
+.card-links { display: flex; justify-content: space-between; gap: 12px; }
+
+/* ── Lite (2D) store: the Browse grid is the shop floor ── */
+.lite-only { display: none; }
+body.lite #stage, body.lite .hint, body.lite .ask-open, body.lite .assistant, body.lite .intro, body.lite #bClose,
+body.lite .sheet-handle, body.lite .tip, body.lite #deckNav { display: none; }
+body.lite { background: var(--paper); }
+body.lite .drawer#browse { top: calc(env(safe-area-inset-top) + 70px); left: 16px; right: 16px; width: auto; border-radius: 16px; }
+body.lite #card, body.lite #checkout, body.lite #confirm { z-index: 9; }
+body.lite .card-thumb { display: block; width: 100%; height: min(22vh, 180px); object-fit: contain; margin-bottom: 10px; border-radius: 12px; background: #ece7df; }
+
+/* ── Category rooms nav ── */
+.rooms {
+  display: flex; gap: 4px; padding: 4px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--glass); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
+.rooms button {
+  font: 600 11px/1 "Space Grotesk", sans-serif; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink); background: none; border: 0; border-radius: 999px; padding: 9px 14px; cursor: pointer;
+  white-space: nowrap; min-height: 34px;
+}
+.rooms { position: relative; }
+.rooms button { position: relative; z-index: 1; transition: color 0.25s; }
+.rooms button.on-pill { color: var(--paper); }
+/* The selection pill slides between tabs and stretches as it goes: the leading edge moves fast, the
+   trailing edge follows (edges swap when it travels back). */
+.pill {
+  position: absolute; top: 4px; bottom: 4px; border-radius: 999px; background: var(--ink);
+  transition: left 0.5s cubic-bezier(0.3, 1.2, 0.4, 1), right 0.28s cubic-bezier(0.3, 1.2, 0.4, 1), opacity 0.2s;
+}
+.pill.back { transition-duration: 0.28s, 0.5s, 0.2s; }
+
+/* Rolling numbers and morphing button labels (js/micro.js). */
+.roll-char, .morph-label { display: inline-block; }
+.btn { white-space: nowrap; overflow: hidden; }
+
+/* Hold-to-confirm: a fill sweeps across while the button is held. */
+.hold { position: relative; overflow: hidden; padding: 8px 10px; border-radius: 999px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.hold::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background: rgba(196, 54, 27, 0.2);
+  transform: scaleX(0); transform-origin: 0 50%; transition: transform 0.2s ease-out;
+}
+.hold.holding { color: #a02c16; }
+.hold.holding::before { transform: scaleX(1); transition: transform var(--hold-ms) linear; }
+.cp-undo { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 0 20px 6px; padding: 10px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--line); font-size: 13px; }
+.cp-undo[hidden] { display: none; }
+.cp-undo .link { color: var(--ink); font-weight: 700; }
+.rooms .browse-open { border: 1px dashed rgba(20, 22, 25, 0.35); }
+.rooms .browse-open span { opacity: 0.6; margin-left: 4px; letter-spacing: 0.04em; }
+
+/* ── Browse all drawer ── */
+.drawer {
+  position: fixed; z-index: 7; top: calc(env(safe-area-inset-top) + 76px); right: 16px; bottom: 16px;
+  width: min(480px, calc(100vw - 32px)); display: flex; flex-direction: column;
+  background: rgba(246, 242, 235, 0.9);
+  opacity: 0; visibility: hidden; transform: translateX(40px);
+  transition: opacity 0.25s, transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.35s;
+}
+.drawer.open { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 6px 20px; }
+.drawer-head h2 { margin: 0; font: 400 28px/1 "Saira Stencil One", Impact, sans-serif; letter-spacing: 0.03em; }
+.filters { padding: 4px 20px 10px; display: grid; gap: 10px; }
+.filters input[type="search"] {
+  margin: 0; padding: 11px 14px; border: 1px solid var(--line); border-radius: 12px; background: #fff; font-size: 16px;
+}
+.cats { display: flex; flex-wrap: wrap; gap: 6px; }
+.cats button {
+  font: 600 12px/1 "Space Grotesk", sans-serif; padding: 9px 13px; min-height: 36px; cursor: pointer;
+  border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--ink);
+}
+.cats button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.filter-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.filter-row select {
+  font: 500 14px "Space Grotesk", sans-serif; padding: 10px; min-height: 40px;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink);
+}
+.price-filter { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 12px; margin: 0; }
+.price-filter output { justify-self: end; font-weight: 700; color: var(--ink); letter-spacing: 0.04em; }
+.price-filter input { grid-column: 1 / -1; margin: 0; padding: 0; border: 0; accent-color: var(--ink); }
+.results-head { display: flex; justify-content: space-between; align-items: center; padding: 0 20px 6px; }
+.count { margin: 0; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.results { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 20px 20px; overscroll-behavior: contain; }
+.grid { position: relative; }
+.pcard {
+  position: absolute; top: 0; left: 0; height: 224px; padding: 8px; display: flex; flex-direction: column; gap: 4px;
+  text-align: left; cursor: pointer; border: 1px solid var(--line); border-radius: 14px; background: #fff; color: var(--ink);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+@media (hover: hover) { .pcard:hover { border-color: rgba(20, 22, 25, 0.35); box-shadow: 0 10px 24px -14px rgba(0, 0, 0, 0.4); } }
+.pcard canvas { width: 100%; height: 160px; object-fit: contain; border-radius: 8px; background: #ece7df; }
+.pname { font: 700 13px/1.2 "Space Grotesk", sans-serif; letter-spacing: 0.04em; }
+.pmeta { font-size: 12px; color: var(--muted); }
+
+@media (max-width: 760px) {
+  body.lite .drawer#browse { top: calc(env(safe-area-inset-top) + 108px); left: 0; right: 0; border-radius: 0; }
+  /* Header becomes two rows: brand + cart, then the scrollable category tabs. */
+  .bar { flex-wrap: wrap; row-gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 12px 0; }
+  .brand { font-size: 20px; }
+  .brand small { display: none; }
+  .rooms { order: 3; width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .rooms::-webkit-scrollbar { display: none; }
+  .rooms button { flex: 1 0 auto; padding: 10px 12px; min-height: 38px; }
+  .cart-link { padding: 8px 8px 8px 14px; min-height: 38px; }
+  .drawer { inset: 0; width: auto; border-radius: 0; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+  .filters { padding: 4px 16px 10px; }
+  .results { padding: 4px 16px 16px; }
+  body.browsing .ask-open, body.browsing .hint { opacity: 0; pointer-events: none; }
+}
+
+@media (max-width: 600px) {
+  .hint { bottom: calc(env(safe-area-inset-bottom) + 76px); white-space: normal; text-align: center; width: max-content; max-width: calc(100vw - 32px); }
+  .assistant { left: 12px; right: 12px; width: auto; height: min(70%, 520px); }
+}
+
+/* Short landscape phones: keep panels inside the screen and scrollable. */
+@media (max-height: 500px) and (min-aspect-ratio: 9/10) {
+  /* Sit below the header row instead of over it. */
+  .panel { top: calc(50% + 30px); max-height: calc(100% - 84px); padding: 16px 20px; }
+  .panel h2 { font-size: 32px; }
+  dt, dd { padding: 4px 0; }
+  #checkout.panel { bottom: calc(env(safe-area-inset-bottom) + 12px); max-height: calc(100% - 76px - env(safe-area-inset-bottom)); }
+  .assistant { top: calc(env(safe-area-inset-top) + 64px); height: auto; }
+  /* Drawer goes two-column: filters scroll on the left, results get the full height on the right. */
+  .drawer {
+    top: calc(env(safe-area-inset-top) + 64px); bottom: 8px; width: calc(100vw - 32px);
+    display: grid; grid-template: "head head" auto "filters rhead" auto "filters results" 1fr / minmax(220px, 34%) 1fr;
+  }
+  .drawer-head { grid-area: head; padding-top: 8px; }
+  .filters { grid-area: filters; min-height: 0; overflow-y: auto; align-content: start; }
+  .results-head { grid-area: rhead; }
+  .results { grid-area: results; min-height: 0; }
+}
+
+@media (max-aspect-ratio: 9/10) {
+  .panel { top: auto; left: 16px; right: 16px; width: auto; bottom: calc(env(safe-area-inset-bottom) + 72px); /* clears Ask Slab */
+           max-height: 56%; padding: 20px; transform: translateY(24px); }
+  .panel.open { transform: none; }
+  #card.panel { transform-origin: 50% 100%; transform: perspective(1200px) translateY(60px) rotateX(70deg) scale(0.95); }
+  #card.panel.open { transform: none; }
+  body.lite #card.panel { bottom: calc(env(safe-area-inset-bottom) + 16px); max-height: calc(100% - 140px); } /* lite has no Ask Slab button to clear */
+  #card.panel { padding-top: 26px; }
+  .sheet-handle {
+    display: block; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 96px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer;
+  }
+  .sheet-handle span { display: block; width: 42px; height: 5px; margin: 10px auto 0; border-radius: 3px; background: rgba(20, 22, 25, 0.28); }
+  #card.peek { cursor: pointer; }
+  #card.peek .more { grid-template-rows: 0fr; }
+  #card.peek .eyebrow, #card.peek .tip, #card.peek .link { display: none; }
+  #card.peek h2 { font-size: 26px; margin-bottom: 10px; }
+  #card.peek .row { margin-bottom: 0; }
+  #checkout.panel { left: 16px; right: 16px; bottom: calc(env(safe-area-inset-bottom) + 72px);
+                    transform: perspective(900px) translateY(120px) rotateX(78deg); }
+  #checkout.panel.open { transform: none; }
+  .panel h2 { font-size: 36px; }
+  dl { margin-bottom: 12px; }
+  dt, dd { padding: 5px 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel, .panel.open, #card.panel, #card.panel.open, #checkout.panel, #checkout.panel.open,
+  .hint, .loader, .assistant, .assistant.open, #card .flip, #card.open .flip, .drawer, .drawer.open { transition: none; }
+  .pulse, .mic.live, .cart-link span.bump, .intro { animation: none; }
+  .btn[aria-busy="true"]::after { animation-duration: 1.6s; } /* still shows work, more calmly */
+  .pill, .hold::before { transition: none; } /* the hold fill keeps its sweep: it is progress, not decoration */
+}

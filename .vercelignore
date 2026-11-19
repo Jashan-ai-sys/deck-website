@@ -1,0 +1,5 @@
+.env*
+dev-server.js
+test
+node_modules
+.playwright-mcp
