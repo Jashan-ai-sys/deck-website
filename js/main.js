@@ -11,7 +11,8 @@ import { makeGripTexture, DECK_L } from './deck.js';
 import { LOW_POWER } from './texture-utils.js';
 import { makeProductMesh, createMeshCache, disposeObject } from './product-mesh.js';
 import { createBoard } from './board.js';
-import { addItem, removeItem, hasItem, cartTotal, boardLines, thankYouLines, orderNumber } from './cart.js';
+import { createBoardPreview } from './board-preview.js';
+import { addItem, removeItem, hasItem, cartTotal, completeBoard, boardLines, thankYouLines, orderNumber } from './cart.js';
 import { animate, ease, reducedMotion, wait } from './tween.js';
 import { initAssistant } from './assistant.js';
 import { initBrowse } from './browse-ui.js';
@@ -76,6 +77,7 @@ scene.add(board.object);
 
 const grip = makeGripTexture(aniso);
 const makeMesh = (p) => makeProductMesh(p, grip, aniso);
+const boardPreview = createBoardPreview(makeMesh);
 const stageCache = createMeshCache(makeMesh, 6); // products shown on the 3D stage from Browse
 const twins = new Map();                          // product id → its copy lying on the counter
 
@@ -375,6 +377,14 @@ function refreshCart() {
   board.setLines(boardLines(cart, PRODUCTS));
   cartPanel.render(cart);
   saveCart(storage, cart);
+  if (mode === 'checkout') showAssembledBoard(cart, $('coBoard'));
+}
+
+// The picked deck, trucks and wheels as one board, once the cart holds all three.
+function showAssembledBoard(ids, container) {
+  const parts = completeBoard(ids, PRODUCTS);
+  if (parts) boardPreview.show(parts, container);
+  else boardPreview.hide(container);
 }
 
 // ── Actions ──────────────────────────────────────────────────────────────
@@ -562,6 +572,7 @@ function openCheckout(takeFocus = true) {
   clearHover();
   setHint(null);
   panel(ui.checkout, true);
+  showAssembledBoard(cart, $('coBoard'));
   if (takeFocus) ui.form.elements.email.focus({ preventScroll: true });
 }
 
@@ -610,6 +621,7 @@ ui.form.addEventListener('submit', async (ev) => {
   setHint(null);
   say(`Demo order ${order.id} placed. Nothing was charged.`);
   showOrder(order, () => { setHint(); run(() => goRoom(room)); });
+  showAssembledBoard(order.items.map((p) => p.id), $('cfBoard'));
 });
 
 // One animated action at a time; input during a transition is ignored.

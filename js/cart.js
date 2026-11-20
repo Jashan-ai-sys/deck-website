@@ -10,6 +10,16 @@ export const hasItem = (cart, id) => cart.includes(id);
 export const cartTotal = (cart, catalog) =>
   cart.reduce((sum, id) => sum + (catalog.find((d) => d.id === id)?.price ?? 0), 0);
 
+// The first deck, wheel set and truck set in the cart, or null until all three are there.
+export function completeBoard(cart, catalog) {
+  const first = {};
+  for (const id of cart) {
+    const p = catalog.find((d) => d.id === id);
+    if (p && !first[p.category]) first[p.category] = p;
+  }
+  return first.decks && first.wheels && first.trucks ? { deck: first.decks, wheels: first.wheels, truck: first.trucks } : null;
+}
+
 // Left text, right text, padded to exactly `width` characters. The right side wins when space runs out.
 export function row(left, right, width = BOARD_WIDTH) {
   const r = String(right).slice(0, width);
