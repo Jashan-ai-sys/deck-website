@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { addItem, removeItem, cartTotal, row, boardLines, thankYouLines, orderNumber, BOARD_WIDTH } from '../js/cart.js';
+import { addItem, removeItem, cartTotal, completeBoard, row, boardLines, thankYouLines, orderNumber, BOARD_WIDTH } from '../js/cart.js';
 import { createFlaps, setTarget, tick, active } from '../js/flaps.js';
 import { PRODUCTS, featured } from '../js/catalog.js';
 
@@ -86,4 +86,14 @@ test('flaps cascade: later rows wait, and tick reports exactly the cells that ch
   tick(f, seq(0));
   assert.deepEqual(tick(f, seq(0)), [4]);     // row 1 starts after its two-tick delay
   assert.equal(f.shown[0], 'A');
+});
+
+test('completeBoard needs a deck, wheels and trucks, and takes the first of each', () => {
+  const [wheels2, wheels1] = [PRODUCTS.filter((p) => p.category === 'wheels')[1], PRODUCTS.find((p) => p.category === 'wheels')];
+  const truck = PRODUCTS.find((p) => p.category === 'trucks');
+  assert.equal(completeBoard([], PRODUCTS), null);
+  assert.equal(completeBoard(['tide', wheels1.id], PRODUCTS), null);
+  assert.equal(completeBoard([wheels1.id, truck.id, 'ghost'], PRODUCTS), null);
+  const board = completeBoard([wheels2.id, 'ghost', 'tide', truck.id, wheels1.id, 'moss'], PRODUCTS);
+  assert.deepEqual([board.deck.id, board.wheels.id, board.truck.id], ['tide', wheels2.id, truck.id]);
 });
