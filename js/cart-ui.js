@@ -4,6 +4,7 @@ import { PRODUCTS, productById } from './catalog.js';
 import { cartTotal } from './cart.js';
 import { paintThumb } from './thumbs.js';
 import { roll, holdButton } from './micro.js';
+import { reducedMotion } from './tween.js';
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, props = {}) => Object.assign(document.createElement(tag), props);
@@ -81,6 +82,22 @@ export function initCartPanel({ onCheckout, onBrowse, onRemove, onUndo, onShow }
 }
 
 let dismissOrder = null;
+let printTimer = 0;
+
+const PRINT_STAGES = { processing: 'Processing your order', printing: 'Printing your receipt', complete: 'Order complete' };
+
+// Walks the receipt printer through processing → printing → complete. Reduced motion lands on complete.
+function runPrinter() {
+  const set = (stage) => {
+    $('cfPrinter').dataset.stage = stage;
+    $('cfStatus').textContent = PRINT_STAGES[stage];
+    $('cfReceipt').setAttribute('aria-hidden', stage !== 'complete');
+  };
+  clearTimeout(printTimer);
+  if (reducedMotion()) { set('complete'); return; }
+  set('processing');
+  printTimer = setTimeout(() => { set('printing'); printTimer = setTimeout(() => set('complete'), 1800); }, 700);
+}
 
 // Hides the receipt without running its onDone, e.g. when the shopper has already gone elsewhere.
 export function hideOrder() { dismissOrder?.(false); }
@@ -96,10 +113,14 @@ export function showOrder({ id, items, total }, onDone) {
     return li;
   }));
   $('cfTotal').textContent = `$${total}`;
+  $('cfScreenOrder').textContent = `Order ${id}`;
+  $('cfScreenTotal').textContent = `$${total}`;
+  runPrinter();
   panel.classList.add('open');
   panel.inert = false;
   $('cfDone').focus({ preventScroll: true });
   const close = (runDone) => {
+    clearTimeout(printTimer);
     panel.classList.remove('open');
     panel.inert = true;
     $('cfDone').removeEventListener('click', done);

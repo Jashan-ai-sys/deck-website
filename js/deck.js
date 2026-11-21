@@ -99,12 +99,12 @@ function rail(rows, surf, segs = 8) {
     const [x, y] = loop[k % n], [px, py] = loop[(k - 1 + n) % n], [qx, qy] = loop[(k + 1) % n];
     if (k) run += Math.hypot(x - px, y - py);
     const ox = -(qy - py), oy = qx - px; // outward in plan (the loop runs clockwise seen from +Z)
-    const { z, n, zx, zy } = surf(x, y);
+    const { z, n: up, zx, zy } = surf(x, y); // `up`: the surface normal (`n` is the point count)
     const d = new THREE.Vector3(ox, oy, zx * ox + zy * oy).normalize(); // outward, in the tangent plane
     for (let s = 0; s <= segs; s++) {
       const phi = (s / segs) * Math.PI, c = Math.cos(phi), si = Math.sin(phi);
-      pos.push(x + n.x * c * DECK_T / 2 + d.x * si * RAIL_R, y + n.y * c * DECK_T / 2 + d.y * si * RAIL_R, z + n.z * c * DECK_T / 2 + d.z * si * RAIL_R);
-      const m = n.clone().multiplyScalar(c / (DECK_T / 2)).addScaledVector(d, si / RAIL_R).normalize();
+      pos.push(x + up.x * c * DECK_T / 2 + d.x * si * RAIL_R, y + up.y * c * DECK_T / 2 + d.y * si * RAIL_R, z + up.z * c * DECK_T / 2 + d.z * si * RAIL_R);
+      const m = up.clone().multiplyScalar(c / (DECK_T / 2)).addScaledVector(d, si / RAIL_R).normalize();
       nrm.push(m.x, m.y, m.z);
       uv.push(run / 0.06, s / segs);
     }
