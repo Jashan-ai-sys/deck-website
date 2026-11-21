@@ -6,6 +6,10 @@
 <title>SLAB Deck Works</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='11' y='2' width='10' height='28' rx='5' fill='%23c98a1b'/%3E%3C/svg%3E">
 <meta name="description" content="SLAB Deck Works: pick a deck off the wall, kickflip it, check out at the counter.">
+<meta name="theme-color" content="#2a2826">
+<meta property="og:title" content="SLAB Deck Works">
+<meta property="og:description" content="A skate shop you can walk into: pick a deck off the wall, build a board and check out at the counter.">
+<meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Space+Grotesk:wght@400;500;700&display=swap">
@@ -104,8 +108,8 @@
     <h2 id="coTitle">Checkout</h2>
     <p class="blurb">Demo store. No payment is taken and nothing leaves your browser.</p>
     <div class="board-preview" id="coBoard" role="group" hidden></div>
-    <label>Email <input name="email" type="email" autocomplete="email" required></label>
-    <label>Shipping address <input name="address" autocomplete="street-address" required></label>
+    <label>Email <input name="email" type="email" autocomplete="email" enterkeyhint="next" required></label>
+    <label>Shipping address <input name="address" autocomplete="street-address" enterkeyhint="done" required></label>
     <div class="row">
       <span class="price" id="coTotal">$0</span>
       <button class="btn" type="submit">Place demo order</button>
@@ -153,6 +157,11 @@
   <span class="pulse" aria-hidden="true"></span> Ask Slab
 </button>
 
+<button class="tape" id="tape" type="button" aria-pressed="false" aria-label="Play shop music" title="A Chill Fever by Pro Sensory (CC0)">
+  <span class="tape-label">A Chill Fever</span>
+  <span class="tape-window" aria-hidden="true"><i class="reel"></i><i class="reel"></i></span>
+</button>
+
 <section class="assistant glass" id="assistant" aria-label="Slab, the AI shop assistant" inert>
   <header class="ask-head">
     <div><strong>Slab</strong><small>AI shop assistant · chat or talk</small></div>
@@ -166,7 +175,7 @@
   <div class="ask-log" id="askLog" role="log" aria-live="polite"></div>
   <div class="ask-chips" id="askChips"></div>
   <form class="ask-form" id="askForm">
-    <input id="askInput" autocomplete="off" maxlength="500" placeholder="Ask about decks, sizing, your cart…" aria-label="Message Slab">
+    <input id="askInput" autocomplete="off" enterkeyhint="send" maxlength="500" placeholder="Ask Slab anything…" aria-label="Message Slab">
     <button class="icon mic" id="askMic" type="button" aria-pressed="false" aria-label="Talk to Slab">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
     </button>

@@ -116,6 +116,7 @@ export function showOrder({ id, items, total }, onDone) {
   $('cfScreenOrder').textContent = `Order ${id}`;
   $('cfScreenTotal').textContent = `$${total}`;
   runPrinter();
+  navigator.vibrate?.([20, 60, 20]); // order placed: two short taps on phones that support it
   panel.classList.add('open');
   panel.inert = false;
   $('cfDone').focus({ preventScroll: true });

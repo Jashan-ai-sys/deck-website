@@ -2,8 +2,8 @@
 import { canListen, listen, primeSpeech, speak, stopSpeaking } from './voice.js';
 
 const MAX_HISTORY = 16;
-const GREETING = "Hi, I'm Slab. Ask me to find anything in the shop, like \"8.5 inch decks under $60\" or \"trucks that fit Ember\".";
-const SUGGESTIONS = ['Find 8.5" decks under $60', 'Soft wheels for cruising', 'Trucks that fit Ember', 'Add Ember to my cart'];
+const GREETING = "Hi, I'm Slab. Ask me to find anything in the shop, like “8.5 inch decks under $60” or “trucks that fit Ember”.";
+const SUGGESTIONS = ['Find 8.5 inch decks under $60', 'Soft wheels for cruising', 'Trucks that fit Ember', 'Add Ember to my cart'];
 
 export function initAssistant(shop) {
   const $ = (id) => document.getElementById(id);

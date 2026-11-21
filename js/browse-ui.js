@@ -123,7 +123,9 @@ export function initBrowse({ products, onPick, onChange = () => {}, onClose = ()
   }
 
   // Open the drawer; `filters` (from the assistant) replace the current ones, otherwise state is kept.
-  function open(filters) {
+  // `keepPlace` (browser Back to the results) also keeps the scroll, as long as the filters are unchanged.
+  function open(filters, { keepPlace = false } = {}) {
+    const before = JSON.stringify(state);
     if (filters) {
       // A size implies its category (labels are unique per category), so the Size select can show it.
       const size = filters.size ?? '';
@@ -136,7 +138,7 @@ export function initBrowse({ products, onPick, onChange = () => {}, onClose = ()
       });
     }
     setOpen(true);
-    apply({ keepScroll: !filters });
+    apply({ keepScroll: !filters || (keepPlace && JSON.stringify(state) === before) });
     if (!filters) query.focus({ preventScroll: true });
   }
 

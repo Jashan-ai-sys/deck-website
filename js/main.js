@@ -12,6 +12,7 @@ import { LOW_POWER } from './texture-utils.js';
 import { makeProductMesh, createMeshCache, disposeObject } from './product-mesh.js';
 import { createBoard } from './board.js';
 import { createBoardPreview } from './board-preview.js';
+import { createCursorPill } from './cursor-pill.js';
 import { addItem, removeItem, hasItem, cartTotal, completeBoard, boardLines, thankYouLines, orderNumber } from './cart.js';
 import { animate, ease, reducedMotion, wait } from './tween.js';
 import { initAssistant } from './assistant.js';
@@ -78,6 +79,7 @@ scene.add(board.object);
 const grip = makeGripTexture(aniso);
 const makeMesh = (p) => makeProductMesh(p, grip, aniso);
 const boardPreview = createBoardPreview(makeMesh);
+const cursorPill = createCursorPill();
 const stageCache = createMeshCache(makeMesh, 6); // products shown on the 3D stage from Browse
 const twins = new Map();                          // product id → its copy lying on the counter
 
@@ -258,6 +260,7 @@ function setHint(text = HINTS[mode]) {
 function clearHover() {
   for (const it of items) it.hoverTarget = 0;
   plaque.userData.setHover(false);
+  cursorPill.hide();
   renderer.domElement.style.cursor = '';
 }
 
@@ -514,6 +517,7 @@ async function toggleCart() {
     say(`${name} added to cart`);
     refreshCart();
     morph(ui.add, 'Added ✓'); // a beat of confirmation before the button becomes "Remove from cart"
+    navigator.vibrate?.(10); // a light tap on phones that support it (Android; iOS ignores it)
     await wait(650);
     if (current) showCard(current.product);
     return;
@@ -772,19 +776,24 @@ canvas.addEventListener('pointercancel', orbitEnd);
 
 canvas.addEventListener('pointermove', (ev) => {
   if (orbit.pointers.has(ev.pointerId)) { orbitMove(ev); return; }
-  if (ev.pointerType !== 'mouse' || busy) return;
-  let pointer = false;
+  if (ev.pointerType !== 'mouse') return;
+  if (busy) { cursorPill.hide(); return; }
+  let pointer = false, action = '';
   if (mode === 'wall') {
     const it = itemOf(hit(ev, itemGroups));
     for (const x of items) x.hoverTarget = x === it ? 1 : 0;
     pointer = Boolean(it);
+    action = 'Look closer';
   } else if (mode === 'counter') {
     pointer = Boolean(hit(ev, [plaque]));
     plaque.userData.setHover(pointer);
+    action = 'Check out';
   } else if (mode === 'focus') {
+    cursorPill.hide();
     canvas.style.cursor = hitsCurrent(ev) ? 'grab' : '';
     return;
   }
+  if (pointer) cursorPill.show(action, ev); else cursorPill.hide();
   canvas.style.cursor = pointer ? 'pointer' : '';
 });
 canvas.addEventListener('pointerleave', (ev) => { if (ev.pointerType === 'mouse') clearHover(); });
@@ -1018,7 +1027,7 @@ function applyRoute(route) {
       else if (route.view === 'browse') {
         if (mode === 'focus') await closeItem({ reopenBrowse: false });
         cartPanel.close({ restoreFocus: false });
-        browse.open(route.filters);
+        browse.open(route.filters, { keepPlace: true });
       } else if (route.view === 'counter') await goCounter();
       else {
         if (mode === 'focus') await closeItem({ reopenBrowse: false });

@@ -1,8 +1,10 @@
 // Entry point: the 3D store when the device can run it, otherwise the 2D lite store (same catalog,
 // search, cart and checkout, no WebGL or three.js needed). `?lite` forces the lite store.
 import { revealShop } from './loader.js';
+import { initCassette } from './cassette.js';
 
-revealShop(); // the opening starts now; whichever store loads marks itself ready
+revealShop();
+initCassette(); // the opening starts now; whichever store loads marks itself ready
 
 function hasWebGL() {
   try {
