@@ -13,7 +13,7 @@ A fictional skate shop you browse in 3D, built to show how an immersive storefro
   - A first-visit welcome, and an order receipt after checkout.
 - **Lite store.** If WebGL or three.js can't run (old device, blocked CDN), or with `?lite`, the same catalog, search, cart, links and checkout run as a plain 2D store.
 
-Plain ES modules and [three.js](https://threejs.org) 0.170 from a CDN, with no build step. Every model and texture is generated in code, so the repo has no image or model files. The assistant runs on Groq (`openai/gpt-oss-120b`, tool calling) behind one serverless function, so the API key never reaches the browser.
+Plain ES modules and [three.js](https://threejs.org) 0.170 from a CDN, with no build step. Every model and texture is generated in code, so the repo has no image or model files. The one asset is the shop music, `audio/a-chill-fever.mp3`. The assistant runs on Groq (`openai/gpt-oss-120b`, tool calling) behind one serverless function, so the API key never reaches the browser.
 
 ## Run locally
 
@@ -84,4 +84,5 @@ In production, `catalog.js` becomes a paged, edge-cached API, and thumbnails and
 | `js/tween.js`, `js/random.js`, `js/texture-utils.js` | Tweens and easing, seeded randomness, canvas-texture helpers |
 | `api/chat.js` | Vercel Function: origin check, rate limit, input limits, friendly errors |
 | `api/_agent.js` | Prompt, tools (search, show, cart, rooms, counter, checkout), validation, and the Groq loop with retries |
+| `js/cassette.js`, `audio/` | The tape-deck button that plays the shop music. Track: "A Chill Fever" by Pro Sensory, [CC0](https://opengameart.org/content/a-chill-fever-loopable) |
 | `dev-server.js` | Local stand-in for Vercel: allowlisted static files plus `/api/chat` |
